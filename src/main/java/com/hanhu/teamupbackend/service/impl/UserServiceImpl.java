@@ -9,6 +9,7 @@ import com.hanhu.teamupbackend.exception.BusinessException;
 import com.hanhu.teamupbackend.mapper.UserMapper;
 import com.hanhu.teamupbackend.model.domain.User;
 import com.hanhu.teamupbackend.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -29,6 +30,7 @@ import static com.hanhu.teamupbackend.contant.UserConstant.USER_LOGIN_STATE;
 * @createDate 2023-03-01 15:44:02
 */
 @Service
+@Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     implements UserService {
 
@@ -120,10 +122,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userAccount",userAccount);
-        queryWrapper.eq("userPassword",userPassword);
+        queryWrapper.eq("userPassword",encryptPassword);
         User user = userMapper.selectOne(queryWrapper);
         //不存在
         if(user == null){
+            log.info("user login failed, userAccount cannot match userPassword");
             return null;
         }
         //存在
