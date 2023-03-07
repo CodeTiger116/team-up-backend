@@ -11,6 +11,7 @@ import com.hanhu.teamupbackend.model.domain.request.UserLoginRequest;
 import com.hanhu.teamupbackend.model.domain.request.UserRegisterRequest;
 import com.hanhu.teamupbackend.service.UserService;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -98,7 +99,7 @@ public class UserController {
     public BaseResponse<List<User>> searchUser(String username ,HttpServletRequest request){
         //仅管理员可查询
         //校验是否为管理员
-        if(!isAdmin(request)){
+        if(!userService.isAdmin(request)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
@@ -113,7 +114,7 @@ public class UserController {
 
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteUser(@RequestBody long id, HttpServletRequest request) {
-        if (!isAdmin(request)) {
+        if (!userService.isAdmin(request)) {
             throw new BusinessException(ErrorCode.NO_AUTH);
         }
         if (id <= 0) {
@@ -122,17 +123,7 @@ public class UserController {
         boolean b = userService.removeById(id);
         return ResultUtils.success(b);
     }
-    /**
-     * 是否为管理员
-     * @param request
-     * @return
-     */
-    private boolean isAdmin(HttpServletRequest request) {
-        // 仅管理员可查询
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User user = (User) userObj;
-        return user != null && user.getUserRole() == ADMIN_ROLE;
-    }
+
 
     @GetMapping("/search/tags")
     public BaseResponse<List<User>> searchUsersByTags(@RequestParam(required = false) List<String> tagNameList) {
@@ -141,5 +132,23 @@ public class UserController {
         }
         List<User> userList = userService.searchUsersByTags(tagNameList);
         return ResultUtils.success(userList);
+    }
+
+    @PostMapping("/update")
+    public BaseResponse<Integer> updateUser(@RequestBody User user, HttpServletRequest request) {
+        // 校验参数是否为空
+        if (user == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        int result = userService.updateUser(user, loginUser);
+        return ResultUtils.success(result);
+    }
+
+    // todo 推荐多个，未实现
+    @GetMapping("/recommend")
+    public BaseResponse<Page<User>> recommendUsers(long pageSize,long pageNumber,HttpServletRequest request){
+
+        return null;
     }
 }
