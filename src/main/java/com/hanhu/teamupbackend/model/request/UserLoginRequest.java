@@ -1,4 +1,4 @@
-package com.hanhu.teamupbackend.model.domain.request;
+package com.hanhu.teamupbackend.model.request;
 
 import lombok.Data;
 
