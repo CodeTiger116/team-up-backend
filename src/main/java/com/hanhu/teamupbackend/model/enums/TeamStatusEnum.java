@@ -2,6 +2,8 @@ package com.hanhu.teamupbackend.model.enums;
 
 /**
  * 队伍状态枚举
+ *
+ * @author hanhu
  */
 public enum TeamStatusEnum {
 
@@ -13,24 +15,18 @@ public enum TeamStatusEnum {
 
     private String text;
 
-    public static TeamStatusEnum getEnumByValue(Integer value) {
-        if (value == null) {
-            return null;
-        }
-        TeamStatusEnum[] values = TeamStatusEnum.values();
-        for (TeamStatusEnum teamStatusEnum : values) {
-            if (teamStatusEnum.getValue() == value) {
-                return teamStatusEnum;
-            }
-        }
-        return null;
-    }
 
+    /**
+     * 构造函数  alt + insert  / alt + shift + 0
+     * @param value
+     * @param text
+     */
     TeamStatusEnum(int value, String text) {
         this.value = value;
         this.text = text;
     }
 
+    //get set 方法，enm不能用 @Data 注解
     public int getValue() {
         return value;
     }
@@ -46,4 +42,21 @@ public enum TeamStatusEnum {
     public void setText(String text) {
         this.text = text;
     }
+
+
+    public static TeamStatusEnum getEnumByValue(Integer value) {
+        if (value == null) {
+            return null;
+        }
+        TeamStatusEnum[] values = TeamStatusEnum.values();
+        for (TeamStatusEnum teamStatusEnum : values) {
+            if (teamStatusEnum.getValue() == value) {
+                return teamStatusEnum;
+            }
+        }
+        return null;
+    }
+
+
+
 }

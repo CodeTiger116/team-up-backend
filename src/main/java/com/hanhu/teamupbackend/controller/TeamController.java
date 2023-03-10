@@ -1,20 +1,27 @@
 package com.hanhu.teamupbackend.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hanhu.teamupbackend.common.BaseResponse;
+import com.hanhu.teamupbackend.common.DeleteRequest;
 import com.hanhu.teamupbackend.common.ErrorCode;
 import com.hanhu.teamupbackend.common.ResultUtils;
 import com.hanhu.teamupbackend.exception.BusinessException;
 import com.hanhu.teamupbackend.model.domain.Team;
 import com.hanhu.teamupbackend.model.domain.User;
+import com.hanhu.teamupbackend.model.dto.TeamQuery;
 import com.hanhu.teamupbackend.model.request.TeamUpdateRequest;
+import com.hanhu.teamupbackend.model.vo.TeamUserVO;
 import com.hanhu.teamupbackend.service.TeamService;
 import com.hanhu.teamupbackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 
 /**
@@ -33,19 +40,28 @@ public class TeamController {
     @Resource
     private TeamService teamService;
 
+    /**
+     * 创建队伍
+     * @param team 队伍信息
+     * @return 创建的队伍id
+     */
     @PostMapping("/add")
-    public BaseResponse<Long> addTeam(@RequestBody Team team){
+    public BaseResponse<Long> addTeam(@RequestBody Team team,User loginUser){
         //判空
         if(team == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        boolean save = teamService.save(team);
-        if(!save){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"插入失败");
-        }
-        return ResultUtils.success(team.getId());
+
+        long teamId = teamService.addTeam(team,loginUser);
+        return ResultUtils.success(teamId);
     }
 
+    /**
+     * 更新队伍
+     * @param teamUpdateRequest 更新信息
+     * @param request
+     * @return 是否成功
+     */
     @PostMapping("/update")
     public BaseResponse<Boolean> updateTeam(@RequestBody TeamUpdateRequest teamUpdateRequest, HttpServletRequest request) {
         if (teamUpdateRequest == null) {
@@ -59,6 +75,11 @@ public class TeamController {
         return ResultUtils.success(true);
     }
 
+    /**
+     * 根据id获取单个队伍
+     * @param id
+     * @return 队伍
+     */
     @GetMapping("/get")
     public BaseResponse<Team> getTeamById(long id) {
         if (id <= 0) {
@@ -69,5 +90,57 @@ public class TeamController {
             throw new BusinessException(ErrorCode.NULL_ERROR);
         }
         return ResultUtils.success(team);
+    }
+
+
+    /**
+     * 获取全部队伍
+     * @param teamQuery 队伍查询封装类
+     * @param request
+     * @return 队伍和用户信息封装类（脱敏）列表
+     */
+    @GetMapping("/list")
+    public BaseResponse<List<TeamUserVO>> listTeams(TeamQuery teamQuery, HttpServletRequest request){
+        return null;
+    }
+
+    /**
+     * 分页查询
+     * @param teamQuery 队伍查询封装类
+     * @return 队伍列表
+     */
+    @GetMapping("/list/page")
+    public BaseResponse<Page<Team>> listTeamsByPage(TeamQuery teamQuery){
+        if(teamQuery == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        //拷贝
+        Team team = new Team();
+        BeanUtils.copyProperties(teamQuery,team);
+        //分页查询
+        QueryWrapper<Team> queryWrapper = new QueryWrapper<>(team);
+        Page<Team> teamPage = teamService.page(new Page<>(teamQuery.getPageNum(), teamQuery.getPageSize()), queryWrapper);
+        return ResultUtils.success(teamPage);
+    }
+
+
+    /**
+     * 删除队伍
+     * @param deleteRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/delete")
+    public BaseResponse<Boolean> deleteTeam(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
+        if (deleteRequest == null || deleteRequest.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        long id = deleteRequest.getId();
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.deleteTeam(id, loginUser);
+        if (!result) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "删除失败");
+        }
+        return ResultUtils.success(true);
     }
 }
