@@ -10,6 +10,7 @@ import com.hanhu.teamupbackend.exception.BusinessException;
 import com.hanhu.teamupbackend.model.domain.Team;
 import com.hanhu.teamupbackend.model.domain.User;
 import com.hanhu.teamupbackend.model.dto.TeamQuery;
+import com.hanhu.teamupbackend.model.request.TeamAddRequest;
 import com.hanhu.teamupbackend.model.request.TeamUpdateRequest;
 import com.hanhu.teamupbackend.model.vo.TeamUserVO;
 import com.hanhu.teamupbackend.service.TeamService;
@@ -42,15 +43,18 @@ public class TeamController {
 
     /**
      * 创建队伍
-     * @param team 队伍信息
+     * @param teamAddRequest 队伍信息
      * @return 创建的队伍id
      */
     @PostMapping("/add")
-    public BaseResponse<Long> addTeam(@RequestBody Team team,User loginUser){
+    public BaseResponse<Long> addTeam(@RequestBody TeamAddRequest teamAddRequest, HttpServletRequest request){
         //判空
-        if(team == null){
+        if(teamAddRequest == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
+        Team team = new Team();
+        BeanUtils.copyProperties(teamAddRequest,team);
+        User loginUser = userService.getLoginUser(request);
 
         long teamId = teamService.addTeam(team,loginUser);
         return ResultUtils.success(teamId);
@@ -101,7 +105,17 @@ public class TeamController {
      */
     @GetMapping("/list")
     public BaseResponse<List<TeamUserVO>> listTeams(TeamQuery teamQuery, HttpServletRequest request){
-        return null;
+        if (teamQuery == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        boolean isAdmin = userService.isAdmin(request);
+        //1、查询队伍列表
+        List<TeamUserVO> teamList =teamService.listTeams(teamQuery,isAdmin);
+        //2、当前用户是否在队伍
+
+
+        //3、队伍已有人数
+        return ResultUtils.success(teamList);
     }
 
     /**
@@ -121,6 +135,16 @@ public class TeamController {
         QueryWrapper<Team> queryWrapper = new QueryWrapper<>(team);
         Page<Team> teamPage = teamService.page(new Page<>(teamQuery.getPageNum(), teamQuery.getPageSize()), queryWrapper);
         return ResultUtils.success(teamPage);
+    }
+
+    @PostMapping("/join")
+    public BaseResponse<Boolean> joinTeam(){
+        return null;
+    }
+
+    @PostMapping("/quit")
+    public BaseResponse<Boolean> quitTeam(){
+        return null;
     }
 
 
@@ -143,4 +167,6 @@ public class TeamController {
         }
         return ResultUtils.success(true);
     }
+
+
 }

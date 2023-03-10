@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author hanhu
  */
+/*
 @Component
 @Slf4j
 public class PreCacheJob {
@@ -40,7 +41,7 @@ public class PreCacheJob {
     private List<Long> mainUserList = Arrays.asList(1L);
 
     // 每天执行，预热推荐用户,cron表达式
-    //@Scheduled(cron = "0 31 0 * * *")
+    @Scheduled(cron = "0 31 0 * * *")
     public void doCacheRecommendUser() {
         RLock lock = redissonClient.getLock("hanhu:precachejob:docache:lock");
         try {
@@ -72,3 +73,4 @@ public class PreCacheJob {
     }
 
 }
+ */

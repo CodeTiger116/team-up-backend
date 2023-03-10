@@ -3,7 +3,11 @@ package com.hanhu.teamupbackend.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.hanhu.teamupbackend.model.domain.Team;
 import com.hanhu.teamupbackend.model.domain.User;
+import com.hanhu.teamupbackend.model.dto.TeamQuery;
 import com.hanhu.teamupbackend.model.request.TeamUpdateRequest;
+import com.hanhu.teamupbackend.model.vo.TeamUserVO;
+
+import java.util.List;
 
 /**
 * @author hh
@@ -35,5 +39,10 @@ public interface TeamService extends IService<Team> {
      */
     boolean deleteTeam(long id, User loginUser);
 
-
+    /**
+     * 查询队伍列表
+     * @param teamQuery
+     * @return
+     */
+    List<TeamUserVO> listTeams(TeamQuery teamQuery, boolean isAdmin);
 }
