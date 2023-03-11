@@ -373,38 +373,38 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         }
         //2、获得当前队伍人数
         long teamHasJoinNum = this.countTeamUserByTeamId(teamId);
-        //3、队伍只剩一人，解散队伍
+        //3、队伍只剩一人，解散队伍，删除队伍表中的信息
         if (teamHasJoinNum == 1){
             this.removeById(teamId);
+        }else {
+            //4、队伍还剩至少两人
+            //不是队长，不用做处理
+            //是队长，转让队长
+            if (userId.equals(team.getUserId())){
+                //4.1 查询已加入队伍的用户和加入时间
+                QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
+                userTeamQueryWrapper.eq("teamId",teamId);
+                userTeamQueryWrapper.last("order by id asc limit 2");
+                //按照id升序排序，最后只返回前两个对象
+                List<UserTeam> userTeamList = userTeamService.list(userTeamQueryWrapper);
+                if (CollectionUtils.isEmpty(userTeamList) || userTeamList.size() <= 1) {
+                    throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+                }
+                //4.2 指定下一位队长
+                UserTeam nextUserTeam = userTeamList.get(1);
+                Long nextTeamLeaderId = nextUserTeam.getUserId();
+                //4.3 更新队伍
+                Team updateTeam = new Team();
+                updateTeam.setId(teamId);
+                updateTeam.setUserId(nextTeamLeaderId);
+                boolean result = this.updateById(updateTeam);
+                if (!result) {
+                    throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新队伍队长失败");
+                }
+            }
         }
 
-        //4、队伍还剩至少两人
-        //不是队长，不用做处理
-        //是队长，转让队长
-        if (userId.equals(team.getUserId())){
-            //4.1 查询已加入队伍的用户和加入时间
-            QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
-            userTeamQueryWrapper.eq("teamId",teamId);
-            userTeamQueryWrapper.last("order by id asc limit 2");
-            //按照id升序排序，最后只返回前两个对象
-            List<UserTeam> userTeamList = userTeamService.list(userTeamQueryWrapper);
-            if (CollectionUtils.isEmpty(userTeamList) || userTeamList.size() <= 1) {
-                throw new BusinessException(ErrorCode.SYSTEM_ERROR);
-            }
-            //4.2 指定下一位队长
-            UserTeam nextUserTeam = userTeamList.get(1);
-            Long nextTeamLeaderId = nextUserTeam.getUserId();
-            //4.3 更新队伍
-            Team updateTeam = new Team();
-            updateTeam.setId(teamId);
-            updateTeam.setUserId(nextTeamLeaderId);
-            boolean result = this.updateById(updateTeam);
-            if (!result) {
-                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新队伍队长失败");
-            }
-        }
-
-        //5、移除关系
+        //5、最后统一移除关系
         userTeamService.remove(queryWrapper);
 
         return false;
