@@ -11,6 +11,8 @@ import com.hanhu.teamupbackend.model.domain.Team;
 import com.hanhu.teamupbackend.model.domain.User;
 import com.hanhu.teamupbackend.model.dto.TeamQuery;
 import com.hanhu.teamupbackend.model.request.TeamAddRequest;
+import com.hanhu.teamupbackend.model.request.TeamJoinRequest;
+import com.hanhu.teamupbackend.model.request.TeamQuitRequest;
 import com.hanhu.teamupbackend.model.request.TeamUpdateRequest;
 import com.hanhu.teamupbackend.model.vo.TeamUserVO;
 import com.hanhu.teamupbackend.service.TeamService;
@@ -137,14 +139,31 @@ public class TeamController {
         return ResultUtils.success(teamPage);
     }
 
+    /**
+     * 加入队伍
+     * @param teamJoinRequest
+     * @param request
+     * @return
+     */
     @PostMapping("/join")
-    public BaseResponse<Boolean> joinTeam(){
-        return null;
+    public BaseResponse<Boolean> joinTeam(@RequestBody TeamJoinRequest teamJoinRequest,HttpServletRequest request){
+        if(teamJoinRequest == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.joinTeam(teamJoinRequest,loginUser);
+        return ResultUtils.success(result);
     }
 
+
     @PostMapping("/quit")
-    public BaseResponse<Boolean> quitTeam(){
-        return null;
+    public BaseResponse<Boolean> quitTeam(@RequestBody TeamQuitRequest teamQuitRequest,HttpServletRequest request){
+        if (teamQuitRequest == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.quitTeam(teamQuitRequest,loginUser);
+        return ResultUtils.success(result);
     }
 
 

@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.hanhu.teamupbackend.model.domain.Team;
 import com.hanhu.teamupbackend.model.domain.User;
 import com.hanhu.teamupbackend.model.dto.TeamQuery;
+import com.hanhu.teamupbackend.model.request.TeamJoinRequest;
+import com.hanhu.teamupbackend.model.request.TeamQuitRequest;
 import com.hanhu.teamupbackend.model.request.TeamUpdateRequest;
 import com.hanhu.teamupbackend.model.vo.TeamUserVO;
 
@@ -45,4 +47,20 @@ public interface TeamService extends IService<Team> {
      * @return
      */
     List<TeamUserVO> listTeams(TeamQuery teamQuery, boolean isAdmin);
+
+    /**
+     * 加入队伍
+     * @param teamJoinRequest
+     * @param loginUser
+     * @return
+     */
+    boolean joinTeam(TeamJoinRequest teamJoinRequest, User loginUser);
+
+    /**
+     * 退出队伍
+     * @param teamQuitRequest
+     * @param loginUser
+     * @return
+     */
+    boolean quitTeam(TeamQuitRequest teamQuitRequest, User loginUser);
 }
