@@ -9,6 +9,7 @@ import com.hanhu.teamupbackend.exception.BusinessException;
 import com.hanhu.teamupbackend.model.domain.User;
 import com.hanhu.teamupbackend.model.request.UserLoginRequest;
 import com.hanhu.teamupbackend.model.request.UserRegisterRequest;
+import com.hanhu.teamupbackend.model.vo.UserVO;
 import com.hanhu.teamupbackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -178,4 +179,21 @@ public class UserController {
 
         return ResultUtils.success(userPage);
     }
+
+    /**
+     * 获取匹配用户
+     * @param num 推荐的数量
+     * @param request
+     * @return
+     */
+    @GetMapping("/match")
+    public BaseResponse<List<User>> matchUser(long num, HttpServletRequest request){
+        if (num <=0 || num > 20){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        List<User> userVOList = userService.matchUser(num,loginUser);
+        return ResultUtils.success(userVOList);
+    }
+
 }

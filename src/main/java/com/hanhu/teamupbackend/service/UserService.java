@@ -2,6 +2,7 @@ package com.hanhu.teamupbackend.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.hanhu.teamupbackend.model.domain.User;
+import com.hanhu.teamupbackend.model.vo.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -84,4 +85,12 @@ public interface UserService extends IService<User> {
      * @return
      */
     boolean isAdmin(User loginUser);
+
+    /**
+     * 获取匹配的用户
+     * @param num
+     * @param loginUser
+     * @return
+     */
+    List<User> matchUser(long num, User loginUser);
 }

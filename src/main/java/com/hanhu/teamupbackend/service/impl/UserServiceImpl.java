@@ -9,9 +9,12 @@ import com.hanhu.teamupbackend.contant.UserConstant;
 import com.hanhu.teamupbackend.exception.BusinessException;
 import com.hanhu.teamupbackend.mapper.UserMapper;
 import com.hanhu.teamupbackend.model.domain.User;
+import com.hanhu.teamupbackend.model.vo.UserVO;
 import com.hanhu.teamupbackend.service.UserService;
+import com.hanhu.teamupbackend.utils.AlgorithmUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
@@ -262,6 +265,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return (User) userObj;
     }
 
+    /**
+     * 是否为管理员
+     * @param request
+     * @return
+     */
     @Override
     public boolean isAdmin(HttpServletRequest request) {
         // 仅管理员可查询
@@ -270,10 +278,55 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return user != null && user.getUserRole() == UserConstant.ADMIN_ROLE;
     }
 
+    /**
+     * 是否为管理员
+     * @param loginUser
+     * @return
+     */
     @Override
     public boolean isAdmin(User loginUser) {
         return loginUser != null && loginUser.getUserRole() == UserConstant.ADMIN_ROLE;
 
+    }
+
+    /**
+     * 获取匹配的用户
+     * @param num
+     * @param loginUser
+     * @return 脱敏后的用户
+     */
+    @Override
+    public List<User> matchUser(long num, User loginUser) {
+        Gson gson = new Gson();
+        //所有用户列表
+        List<User> userList = this.list();
+        //当前登录用户的tag
+        String tags = loginUser.getTags();
+        List<String> tagList = gson.fromJson(tags, new TypeToken<List<String>>() {
+        }.getType());
+        //计算所有用户和当前用户的相似度
+        //使用列表存储， user==》分数
+        List<Pair<User, Long>> list = new ArrayList<>();
+        for (User user : userList){
+            //比较遍历用户的tag和登录用户的tag
+            String userTags = user.getTags();
+            List<String> userTagList = gson.fromJson(userTags, new TypeToken<List<String>>() {
+            }.getType());
+            if (StringUtils.isBlank(userTags) || user.getId().equals(loginUser.getId())) {
+                continue;
+            }
+            long distance = AlgorithmUtils.minDistance(tagList, userTagList);
+            list.add(new Pair<>(user,distance));
+        }
+        //按编辑距离从小到大排序
+        List<Pair<User, Long>> topUserPairList = list
+                .stream()
+                .sorted(Comparator.comparing(Pair::getValue))
+                .limit(num)
+                .collect(Collectors.toList());
+
+        //用户脱敏
+        return null;
     }
 
 }

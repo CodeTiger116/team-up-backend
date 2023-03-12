@@ -20,7 +20,7 @@ public class TeamQuery extends PageRequest {
     private Long id;
 
     /**
-     * id 列表
+     * id 列表，根据多个id来查询
      */
     private List<Long> idList;
 

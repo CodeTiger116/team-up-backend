@@ -35,11 +35,11 @@ public interface TeamService extends IService<Team> {
 
     /**
      * 删除/解散 队伍
-     * @param id
+     * @param teamId
      * @param loginUser
      * @return
      */
-    boolean deleteTeam(long id, User loginUser);
+    boolean deleteTeam(long teamId, User loginUser);
 
     /**
      * 查询队伍列表
