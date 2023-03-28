@@ -35,6 +35,7 @@ import static com.hanhu.teamupbackend.contant.UserConstant.USER_LOGIN_STATE;
  * @author hanhu
  */
 @RestController
+@CrossOrigin(origins = {"http://localhost:3000"})
 @RequestMapping("/user")
 @Slf4j
 public class UserController {
@@ -157,7 +158,7 @@ public class UserController {
 
     // todo 推荐多个，未实现
     @GetMapping("/recommend")
-    public BaseResponse<Page<User>> recommendUsers(long pageSize, long pageNumber, HttpServletRequest request){
+    public BaseResponse<Page<User>> recommendUsers(long pageSize, long pageNum, HttpServletRequest request){
         User loginUser = userService.getLoginUser(request);
         String redisKey = String.format("user:recommend:%s",loginUser.getId());
         ValueOperations<String,Object> valueOperations = redisTemplate.opsForValue();
@@ -168,7 +169,7 @@ public class UserController {
         }
         //没有缓存，读数据库
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        userPage = userService.page(new Page<>(pageNumber,pageSize),queryWrapper);
+        userPage = userService.page(new Page<>(pageNum,pageSize),queryWrapper);
 
         //写入缓存
         try {

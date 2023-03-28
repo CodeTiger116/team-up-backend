@@ -2,6 +2,7 @@ package com.hanhu.teamupbackend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.xiaoymin.knife4j.core.util.StrUtil;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.hanhu.teamupbackend.common.ErrorCode;
@@ -15,6 +16,7 @@ import com.hanhu.teamupbackend.utils.AlgorithmUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.util.Pair;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
@@ -241,7 +243,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // todo 补充校验，如果用户没有传任何要更新的值，就直接报错，不用执行 update 语句
         // 如果是管理员，允许更新任意用户
         // 如果不是管理员，只允许更新当前（自己的）信息
-        if(!isAdmin(loginUser)){
+        if(!isAdmin(loginUser) && userId != loginUser.getId()){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         User oldUser = userMapper.selectById(userId);
@@ -262,6 +264,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             return null;
         }
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        if (userObj == null) {
+            throw new BusinessException(ErrorCode.NO_AUTH);
+        }
         return (User) userObj;
     }
 
@@ -298,9 +303,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public List<User> matchUser(long num, User loginUser) {
         Gson gson = new Gson();
-        //所有用户列表
-        List<User> userList = this.list();
-        //当前登录用户的tag
+        //所有用户列表，查询tag不为空的
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id", "tags");
+        queryWrapper.ne("tags","[]");
+        queryWrapper.isNotNull("tags");
+        List<User> userList = this.list(queryWrapper);
+        //当前登录用户的tag,并转换成列表
         String tags = loginUser.getTags();
         List<String> tagList = gson.fromJson(tags, new TypeToken<List<String>>() {
         }.getType());
@@ -324,9 +333,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
                 .sorted(Comparator.comparing(Pair::getValue))
                 .limit(num)
                 .collect(Collectors.toList());
+        List<Long> userIdList = topUserPairList.stream().map(pair -> pair.getKey().getId()).collect(Collectors.toList());
+
+        //按照userIdList中的id顺序，查到User
+        String idStr = StringUtils.join(userIdList,",");
+        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+        userQueryWrapper.in("id",userIdList)
+                .last("ORDER BY FIELD(id," + idStr + ")");
 
         //用户脱敏
-        return null;
+        return this.list(userQueryWrapper)
+                .stream()
+                .map(this::getSafetyUser)
+                .collect(Collectors.toList());
     }
 
 }

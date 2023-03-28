@@ -22,6 +22,7 @@ import com.hanhu.teamupbackend.service.UserTeamService;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
  * @author hanhu
  */
 @RestController
+@CrossOrigin(origins = {"http://localhost:3000"})
 @RequestMapping("/team")
 @Slf4j
 public class TeamController {
@@ -122,6 +124,9 @@ public class TeamController {
         boolean isAdmin = userService.isAdmin(request);
         // 1、查询队伍列表
         List<TeamUserVO> teamList = teamService.listTeams(teamQuery, isAdmin);
+        if (CollectionUtils.isEmpty(teamList)){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"队伍列表为空");
+        }
         //  队伍id列表， 此时hasJoinNum和hasJoin为空
         final List<Long> teamIdList = teamList.stream().map(TeamUserVO::getId).collect(Collectors.toList());
         // 2、判断当前用户是否已加入队伍

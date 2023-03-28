@@ -88,7 +88,7 @@ public class User implements Serializable {
     private String planetCode;
 
     /**
-     * 标签 json 列表
+     * 标签 json 列表,不能包含空格，否则gson序列化会报错
      */
     private String tags;
 
